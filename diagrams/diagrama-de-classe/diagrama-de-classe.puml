@@ -1,0 +1,91 @@
+@startuml
+title Diagrama de Classes - Sistema de Aluguel
+
+
+abstract class Proprietario {
+  +nome: String
+  +endereco: String
+}
+
+class Cliente {
+  +rg: String
+  +cpf: String
+  +profissao: String
+  +submeterPedido()
+  +modificarPedido()
+  +consultarPedido()
+  +cancelarPedido()
+}
+
+class Rendimento {
+  +entidadeEmpregadora: String
+  +valor: double
+}
+
+abstract class Agente {
+  +avaliarPedido()
+  +modificarPedido()
+}
+
+class Empresa {
+  +cnpj: String
+  +nomeFantasia: String
+  +inscricaoEstadual: String
+}
+
+class Banco {
+  +cnpj: String
+  +codigoBanco: String
+  +concederCredito()
+}
+
+' --- Classes do Processo ---
+class Pedido {
+  +id: int
+  +status: String
+  +dataCriacao: Date
+  +getStatus()
+}
+
+class Contrato {
+  +id: int
+  +dataExecucao: Date
+  +gerar()
+}
+
+class ContratoCredito {
+  +id: int
+  +valor: double
+  +taxaJuros: float
+}
+
+class Automovel {
+  +matricula: String
+  +placa: String
+  +ano: int
+  +marca: String
+  +modelo: String
+}
+
+Proprietario <|-- Cliente
+Proprietario <|-- Agente
+
+Agente <|-- Empresa
+Agente <|-- Banco
+
+Cliente "1" *-- "1..3" Rendimento
+
+Cliente "1" -- "0..*" Pedido : (solicita)
+
+Agente "1" -- "0..*" Pedido : (avalia)
+
+Pedido "1" -- "0..1" Contrato : (gera)
+
+Contrato "1" -- "1" Automovel : (refere-se a)
+
+Contrato "1" -- "0..1" ContratoCredito : (associado a)
+Banco "1" -- "0..*" ContratoCredito : (concede)
+
+Contrato "1" -- "1" Proprietario : (proprietário)
+
+@enduml
