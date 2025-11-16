@@ -1,0 +1,114 @@
+@startuml
+title Diagrama de Entidade-Relacionamento (DER) - Aluguel de Carros
+
+
+entity "PROPRIETARIO" as P {
+  * **PK_Proprietario** : int
+  ---
+  * nome : String
+  * endereco : String
+  * tipo : String (Cliente, Empresa, Banco)
+}
+
+entity "AGENTE" as AG {
+  * **PK_Agente** : int (FK de Proprietario)
+  ---
+  * cnpj : String
+}
+
+
+entity "CLIENTE" as C {
+  * **PK_Cliente** : int (FK de Proprietario)
+  ---
+  * rg : String
+  * cpf : String
+  * profissao : String
+}
+
+entity "EMPRESA" as E {
+  * **PK_Empresa** : int (FK de Agente)
+  ---
+  * nomeFantasia : String
+  * inscricaoEstadual : String
+}
+
+entity "BANCO" as B {
+  * **PK_Banco** : int (FK de Agente)
+  ---
+  * codigoBanco : String
+}
+
+
+entity "PEDIDO" as PE {
+  * **PK_Pedido** : int
+  ---
+  * *FK_Cliente* : int
+  * *FK_Agente* : int
+  * status : String
+  * dataCriacao : Date
+}
+
+entity "CONTRATO" as CO {
+  * **PK_Contrato** : int
+  ---
+  * *FK_Pedido* : int
+  * *FK_Automovel* : int
+  * *FK_Proprietario* : int
+  * dataExecucao : Date
+}
+
+entity "CONTRATO_CREDITO" as CC {
+  * **PK_ContratoCredito** : int
+  ---
+  * *FK_Contrato* : int
+  * *FK_Banco* : int
+  * valor : double
+  * taxaJuros : float
+}
+
+entity "AUTOMOVEL" as A {
+  * **PK_Automovel** : int
+  ---
+  * matricula : String
+  * placa : String
+  * ano : int
+  * marca : String
+  * modelo : String
+}
+
+' --- Entidade Fraca ---
+
+entity "RENDIMENTO" as R {
+  * **PK_Rendimento** : int
+  ---
+  * *FK_Cliente* : int (Parte da PK)
+  * entidadeEmpregadora : String
+  * valor : double
+}
+
+
+' --- Relacionamentos de Herança (ISA) ---
+P ||--|| C : (ISA)
+P ||--|| AG : (ISA)
+AG ||--|| E : (ISA)
+AG ||--|| B : (ISA)
+
+' --- Relacionamentos ---
+
+' Cliente tem Rendimentos (Composição)
+C ||--o{ R : (Cliente possui 1..3 Rendimentos)
+
+' Pedido
+C |o--o{ PE : (Cliente solicita)
+AG |o--o{ PE : (Agente avalia)
+
+' Contrato
+PE ||--o| CO : (Pedido gera)
+A ||--|{ CO : (Contrato refere-se a)
+P |o--|{ CO : (Proprietário do Contrato)
+
+' Contrato de Crédito
+B |o--o{ CC : (Banco concede)
+CO ||..o| CC : (Contrato tem (opcional))
+
+@enduml
