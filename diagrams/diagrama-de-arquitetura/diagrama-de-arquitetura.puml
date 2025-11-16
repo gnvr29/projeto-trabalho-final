@@ -1,0 +1,77 @@
+@startuml
+title Diagrama de Arquitetura - Sistema de Aluguel de Carros
+
+
+' Atores (Clientes e Agentes)
+actor Usuário as "Usuário\n(Cliente ou Agente)"
+
+' Nuvem (Internet)
+cloud "Internet" {
+
+    rectangle "React Frontend" as ReactApp {
+        component "Browser (SPA)" as Browser
+    }
+}
+
+' Backend - Servidor Central
+rectangle "Servidor Central (Backend)" as Backend {
+
+    component "API Gateway / Load Balancer" as LB
+    
+    ' Aplicação
+    rectangle "Spring Boot API" as SpringApp {
+        component "[Spring Boot App]" as App
+        note bottom of App
+            Subsistema de "gestão de
+            pedidos e contratos".
+        end note
+    }
+
+    ' Cache
+    rectangle "Cache" as Cache {
+        database "Redis" as Redis
+        note top of Redis
+            Armazena sessões,
+            disponibilidade de carros,
+            listas de pedidos pendentes.
+        end note
+    }
+
+    ' Banco de Dados Relacional
+    rectangle "Banco de Dados" as DB {
+        database "PostgreSQL" as Postgres
+        note top of Postgres
+            Armazena dados estruturados:
+            Usuários, Pedidos, Carros,
+            Contratos, Links para arquivos.
+        end note
+    }
+
+    ' Armazenamento de Arquivos
+    rectangle "Armazenamento de Objetos" as Storage {
+        database "Object Storage\n(S3, Minio, etc)" as S3
+        note top of S3
+            Armazena arquivos pesados:
+            Fotos de carros,
+            Scans de RG/CPF,
+            PDFs de Contratos.
+        end note
+    }
+}
+
+' --- Fluxo de Dados ---
+Usuário --> Browser : (usa)
+
+Browser -down-> LB : HTTPS (API Requests)\n(JSON)
+
+LB --> App : (roteia)
+
+App <--> Redis : (cache de sessão e dados)
+App <--> Postgres : (lê/escreve dados principais)
+App <--> S3 : (salva/lê arquivos)
+note on link
+  1. Salva arquivo (ex: PDF) no S3
+  2. Salva a URL do arquivo no Postgres
+end note
+
+@enduml
