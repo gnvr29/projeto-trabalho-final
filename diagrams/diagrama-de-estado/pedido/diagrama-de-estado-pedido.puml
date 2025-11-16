@@ -1,0 +1,20 @@
+@startuml
+title Diagrama de Estado - Pedido
+
+[*] --> Pendente : Cliente Submete
+
+Pendente --> EmAnálise : Agente inicia avaliação
+Pendente --> Pendente : Cliente modifica
+Pendente --> Cancelado : Cliente cancela
+
+EmAnálise --> Contratado : Agente (parecer positivo)
+EmAnálise --> Rejeitado : Agente (parecer negativo)
+EmAnálise --> Pendente : Agente modifica (requer reavaliação)
+EmAnálise --> Cancelado : Cliente cancela
+
+
+Rejeitado --> [*]
+Cancelado --> [*]
+Contratado --> [*]
+
+@enduml
