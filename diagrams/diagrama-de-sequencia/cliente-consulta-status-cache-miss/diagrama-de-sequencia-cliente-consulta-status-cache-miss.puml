@@ -1,0 +1,41 @@
+@startuml
+title Cliente Consulta Status (Cache Miss)
+autonumber
+
+actor Cliente
+participant ":UI (React)" as UI
+participant ":Gateway API" as Gateway
+participant ":API Backend (Spring)" as Backend
+database ":BD (PostgreSQL)" as DB
+database ":Cache (Redis)" as Cache
+
+Cliente -> UI : 1. Solicita "Meus Pedidos"
+activate UI
+UI -> Gateway : 2. GET /api/pedidos/meus
+activate Gateway
+Gateway -> Backend : 3. getPedidosPorCliente(clienteId)
+activate Backend
+
+Backend -> Cache : 4. get('pedidos:cliente123')
+activate Cache
+Cache --> Backend : 5. [Retorna 'nil' (Cache Miss)]
+deactivate Cache
+
+Backend -> DB : 6. "SELECT * FROM pedidos WHERE..."
+activate DB
+DB --> Backend : 7. [Retorna Lista de Pedidos]
+deactivate DB
+
+' O Backend agora salva o resultado no cache
+Backend -> Cache : 8. set('pedidos:cliente123', [Lista...])
+activate Cache
+Cache --> Backend
+deactivate Cache
+
+Backend --> Gateway : 9. [Retorna Lista de Pedidos]
+Gateway --> UI : 10. [Retorna Lista de Pedidos]
+UI --> Cliente : 11. Exibe lista de pedidos
+deactivate UI
+deactivate Gateway
+deactivate Backend
+@enduml

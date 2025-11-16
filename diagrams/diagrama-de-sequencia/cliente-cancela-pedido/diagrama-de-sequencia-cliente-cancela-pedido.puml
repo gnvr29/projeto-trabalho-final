@@ -1,0 +1,52 @@
+@startuml
+title Cliente Cancela Pedido
+autonumber
+
+actor Cliente
+participant ":UI (React)" as UI
+participant ":Gateway API" as Gateway
+participant ":API Backend (Spring)" as Backend
+database ":BD (PostgreSQL)" as DB
+database ":Cache (Redis)" as Cache
+
+Cliente -> UI : 1. Clica em "Cancelar Pedido"
+activate UI
+UI -> Gateway : 2. DELETE /api/pedidos/123
+activate Gateway
+Gateway -> Backend : 3. cancelarPedido(pedidoId=123)
+activate Backend
+
+' O sistema verifica se o cancelamento é permitido
+Backend -> DB : 3.1 getStatus(pedidoId=123)
+activate DB
+DB --> Backend : 3.2 [Retorna Status: 'Pendente']
+deactivate DB
+
+alt Status é 'Pendente' (Pode cancelar)
+    Backend -> DB : 3.3 "UPDATE pedidos SET status='Cancelado'..."
+    activate DB
+    DB --> Backend : 3.4 [Sucesso]
+    deactivate DB
+    
+    ' Invalida os caches
+    Backend -> Cache : 3.5 invalidar('cache:pedidos_pendentes')
+    activate Cache
+    Cache --> Backend
+    deactivate Cache
+    Backend -> Cache : 3.6 invalidar('pedidos:cliente123')
+    activate Cache
+    Cache --> Backend
+    deactivate Cache
+    
+    Backend --> Gateway : 4. [HTTP 200 OK]
+    Gateway --> UI : 5. [Sucesso]
+    UI --> Cliente : 6. Exibe "Pedido Cancelado"
+else Status é 'Aprovado' (Não pode cancelar)
+    Backend --> Gateway : 4. [HTTP 403 Forbidden: Não pode cancelar]
+    Gateway --> UI : 5. [Erro]
+    UI --> Cliente : 6. Exibe "Erro: Pedido já aprovado"
+end
+deactivate UI
+deactivate Gateway
+deactivate Backend
+@enduml

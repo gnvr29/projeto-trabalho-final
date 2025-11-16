@@ -1,0 +1,36 @@
+@startuml
+title SD - Realização: Cliente Submete Pedido
+autonumber
+
+actor Cliente
+participant ":UI (React)" as UI
+participant ":Gateway API" as Gateway
+participant ":API Backend (Spring)" as Backend
+database ":BD (PostgreSQL)" as DB
+database ":Cache (Redis)" as Cache
+
+Cliente -> UI : 1. Preenche e submete formulário
+activate UI
+UI -> Gateway : 2. POST /api/pedidos (dados)
+activate Gateway
+Gateway -> Backend : 3. criarPedido(dados)
+activate Backend
+
+Backend -> DB : 3.1 Salvar novo pedido (status='Pendente')
+activate DB
+DB --> Backend : 3.2 [Retorna Pedido com ID]
+deactivate DB
+
+' Invalida o cache dos agentes para que eles vejam a nova lista
+Backend -> Cache : 3.3 invalidar('cache:pedidos_pendentes')
+activate Cache
+Cache --> Backend
+deactivate Cache
+
+Backend --> Gateway : 4. [HTTP 201 Created]
+Gateway --> UI : 5. [Sucesso]
+UI --> Cliente : 6. Exibe "Pedido enviado!"
+deactivate UI
+deactivate Gateway
+deactivate Backend
+@enduml
