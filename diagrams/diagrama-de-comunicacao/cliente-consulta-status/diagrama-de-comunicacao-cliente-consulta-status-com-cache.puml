@@ -1,0 +1,30 @@
+@startuml
+title Diagrama de Comunicação - Cliente Consulta Status (Cache Hit)
+
+actor Cliente
+participant ":UI (React)" as UI
+participant ":Gateway API" as Gateway
+participant ":API Backend (Spring)" as Backend
+participant ":Cache (Redis)" as Cache
+' O BD (PostgreSQL) não é usado neste cenário "feliz"
+
+' --- Links ---
+Cliente -> UI
+UI -> Gateway
+Gateway -> Backend
+Backend -> Cache
+
+' --- Fluxo ---
+Cliente -> UI : 1: meusPedidos()
+UI -> Gateway : 2: getMeusPedidos()
+Gateway -> Backend : 3: getPedidosPorCliente(clienteId)
+
+' O Backend TENTA buscar os dados no cache primeiro
+Backend -> Cache : 4: get('pedidos:clienteId')
+Cache --> Backend : 4.1: [Dados dos Pedidos (JSON)]
+
+' Sucesso! O cache tinha os dados (Cache Hit)
+Backend --> Gateway : 5: [Dados dos Pedidos]
+Gateway --> UI : 6: [Exibe Lista de Pedidos]
+UI --> Cliente : 7: [Mostra Status]
+@enduml

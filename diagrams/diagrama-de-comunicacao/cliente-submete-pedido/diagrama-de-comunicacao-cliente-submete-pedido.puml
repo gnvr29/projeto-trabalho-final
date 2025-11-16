@@ -1,0 +1,30 @@
+@startuml
+title Diagrama de Comunicação - Cliente Submete um Pedido
+
+' --- Ator ---
+actor Cliente
+
+' --- Componentes (Objetos) ---
+participant ":UI (React)" as UI
+participant ":Gateway API" as Gateway
+participant ":API Backend (Spring)" as Backend
+participant ":BD (PostgreSQL)" as DB
+participant ":Cache (Redis)" as Cache
+
+
+Cliente -> UI : 1: preencherFormulario()
+UI -> Gateway : 2: submeterPedido(dados)
+Gateway -> Backend : 3: criarPedido(dados)
+
+Backend -> Backend : 3.1: validarDados()
+
+Backend -> DB : 3.2: salvarPedido(dados, 'Pendente')
+DB --> Backend : 3.2.1: [Pedido #123 Criado]
+
+Backend -> Cache : 3.3: invalidarCache('pedidos_pendentes')
+
+Backend --> Gateway : 4: [Sucesso: Pedido #123]
+Gateway --> UI : 5: [Exibe Sucesso]
+UI --> Cliente : 6: [Notificação de Sucesso]
+
+@enduml

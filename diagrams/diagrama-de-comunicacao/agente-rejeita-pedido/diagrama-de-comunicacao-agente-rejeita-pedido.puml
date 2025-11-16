@@ -1,0 +1,28 @@
+@startuml
+title Diagrama de Comunicação - Agente Rejeita Pedido
+
+actor Agente
+participant ":Gateway API" as Gateway
+participant ":API Backend (Spring)" as Backend
+participant ":BD (PostgreSQL)" as DB
+participant ":Cache (Redis)" as Cache
+
+' --- Links ---
+Agente -> Gateway
+Gateway -> Backend
+Backend -> DB
+Backend -> Cache
+
+' --- Fluxo ---
+Agente -> Gateway : 1: submeterAnalise(pedidoId, 'Rejeitado', motivo)
+Gateway -> Backend : 2: rejeitarPedido(pedidoId, motivo)
+
+=Backend -> DB : 3: setStatus(pedidoId, 'Rejeitado')
+Backend -> DB : 3.1: salvarMotivoRejeicao(pedidoId, motivo)
+
+Backend -> Cache : 4: invalidarCache('pedidos_pendentes')
+
+' Resposta de sucesso
+Backend --> Gateway : 5: [Sucesso: Pedido Rejeitado]
+Gateway --> Agente : 6: [Exibe Sucesso]
+@enduml
