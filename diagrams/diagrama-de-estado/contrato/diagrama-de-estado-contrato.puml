@@ -1,0 +1,20 @@
+@startuml
+title Diagrama de Estado - Contrato
+
+[*] --> Pendente
+
+Pendente --> Ativo : Início do aluguel (retirada)
+Pendente --> Cancelado : Cancelamento (pré-início)
+
+Ativo --> Encerrado : Fim do aluguel (devolução)
+Ativo --> Cancelado : Rescisão antecipada
+
+' Estados opcionais baseados no requisito de "crédito"
+Ativo --> Inadimplente : Falha no pagamento
+Inadimplente --> Ativo : Pagamento regularizado
+Inadimplente --> Cancelado : Rescisão por inadimplência
+
+Encerrado --> [*]
+Cancelado --> [*]
+
+@enduml
