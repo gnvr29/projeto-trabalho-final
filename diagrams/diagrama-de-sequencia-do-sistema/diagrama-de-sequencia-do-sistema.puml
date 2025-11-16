@@ -1,0 +1,30 @@
+@startuml
+title SSD - Cenário Combinado (Submeter, Consultar, Cancelar)
+autonumber
+
+actor Cliente
+participant ":Sistema" as Sistema
+
+Cliente -> Sistema : 1. submeterPedido(dadosPedido)
+activate Sistema
+Sistema --> Cliente : [Pedido Criado, ID=123]
+deactivate Sistema
+
+... algum tempo depois ...
+
+Cliente -> Sistema : 2. consultarMeusPedidos()
+activate Sistema
+Sistema --> Cliente : [Lista: (ID=123, Status='Pendente')]
+deactivate Sistema
+
+... algum tempo depois ...
+
+Cliente -> Sistema : 3. cancelarPedido(ID=123)
+activate Sistema
+alt Pedido ainda 'Pendente'
+    Sistema --> Cliente : [Sucesso: Pedido Cancelado]
+else Pedido já 'Aprovado'
+    Sistema --> Cliente : [Erro: Não pode cancelar]
+end
+deactivate Sistema
+@enduml
