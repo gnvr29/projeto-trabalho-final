@@ -1,0 +1,49 @@
+@startuml
+
+title Diagrama de Casos de Uso - Sistema de Aluguel de Carros
+
+left to right direction
+
+actor Cliente
+actor Agente
+actor Empresa
+actor Banco
+
+Agente <|-- Empresa
+Agente <|-- Banco
+
+rectangle "Subsistema de Gestão de Pedido e Contratos" as Sistema {
+  
+  usecase UC1 as "Efetuar Pedido de Aluguel"
+  usecase UC2 as "Modificar Pedido"
+  usecase UC3 as "Consultar Pedido"
+  usecase UC4 as "Cancelar Pedido"
+  
+  usecase UC5 as "Avaliar Pedido\n(Análise Financeira)"
+  usecase UC6 as "Modificar Pedido"
+  usecase UC7 as "Executar Contrato"
+  usecase UC8 as "Gerenciar Contrato (Registrar Propriedade)"
+  usecase UC9 as "Gerenciar Catálogo de Automóveis"
+  usecase UC10 as "Conceder Contrato de Crédito"
+  
+}
+
+Cliente -- UC1
+Cliente -- UC2
+Cliente -- UC3
+Cliente -- UC4
+
+Agente -- UC5
+Agente -- UC6
+Agente -- UC7
+Agente -- UC8
+Agente -- UC9
+Banco -- UC10
+
+UC10 ..> UC7 : <<extend>>
+
+UC7 ..> UC5 : <<include>>
+
+'(Fazer Pedido) ..> (Cancelar Pedido) : <<extend>>
+
+@enduml
