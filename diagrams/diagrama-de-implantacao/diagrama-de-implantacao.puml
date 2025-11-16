@@ -1,0 +1,40 @@
+@startuml
+title Diagrama de Implantação - Sistema de Aluguel de Carros
+
+actor Usuário as "Cliente / Agente"
+
+node "Dispositivo do Usuário" as UserDevice {
+    artifact "Browser" as Browser {
+        artifact "ReactApp.js (SPA)" as ReactApp
+    }
+}
+
+cloud "Internet" as Internet
+
+node "AWS" as ServerCloud {
+
+    node "ECS" as AppServer {
+        artifact "SpringApp.jar" as SpringApp
+    }
+
+    database "RDS" as DBServer {
+        artifact "PostgreSQL" as Postgres
+    }
+
+    database "ElastiCache" as CacheServer {
+        artifact "Redis" as Redis
+    }
+
+    storage "S3" as S3_Service
+}
+
+Usuário -- UserDevice
+
+UserDevice -up- Internet
+Internet -down- AppServer : (HTTPS: API Calls)
+
+AppServer ..> DBServer : (JDBC)
+AppServer ..> CacheServer : (TCP/IP)
+AppServer ..> S3_Service : (HTTPS: S3 API)
+
+@enduml
