@@ -1,0 +1,16 @@
+@startuml
+title Diagrama de Estado - Automóvel
+
+[*] --> Disponível
+
+Disponível --> Alugado : Contrato iniciado (retirada)
+Disponível --> EmManutenção : Enviar para revisão/conserto
+Disponível --> Desativado : Retirar da frota (venda/fim)
+
+Alugado --> Disponível : Contrato encerrado (devolução)
+
+EmManutenção --> Disponível : Retorno da manutenção
+
+Desativado --> [*]
+
+@enduml
