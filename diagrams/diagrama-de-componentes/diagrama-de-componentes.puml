@@ -1,0 +1,51 @@
+@startuml
+title Diagrama de Componentes - Sistema de Aluguel de Carros
+
+package "Frontend (React SPA)" {
+    [UI Cliente] <<component>>
+    
+    interface "REST API" as IRestApi
+    [UI Cliente] ..> IRestApi : requer
+}
+
+package "Infraestrutura de Rede" {
+    [Firewall] <<component>>
+    [Gateway API] <<component>>
+    [Load Balancer] <<component>>
+
+    [Firewall] --> [Gateway API] : Filtra Tráfego
+    [Gateway API] --> [Load Balancer] : Roteia Tráfego
+    
+    [Gateway API] o-- IRestApi : fornece
+}
+
+package "Backend (Spring Boot)" {
+    [API (Spring Boot)] <<component>>
+
+    [Load Balancer] --> [API (Spring Boot)] : Distribui Requisições
+
+    interface "Data Access (JPA)" as IDb
+    interface "Cache Access (Redis)" as ICache
+    interface "File Storage (S3 API)" as IStorage
+
+    [API (Spring Boot)] ..> IDb : requer
+    [API (Spring Boot)] ..> ICache : requer
+    [API (Spring Boot)] ..> IStorage : requer
+
+    [API (Spring Boot)] ..> ICredito : requer
+}
+
+package "Camada de Dados" {
+    [PostgreSQL] <<database>>
+    [Redis Cache] <<database>>
+    [Object Storage (S3)] <<component>>
+
+    [PostgreSQL] o-- IDb : fornece
+    [Redis Cache] o-- ICache : fornece
+    [Object Storage (S3)] o-- IStorage : fornece
+}
+
+' --- Conexão de ponta a ponta (Cliente -> Gateway) ---
+[UI Cliente] --> [Gateway API] : Requisições HTTP/S
+
+@enduml
