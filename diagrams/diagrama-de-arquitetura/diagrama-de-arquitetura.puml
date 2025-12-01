@@ -1,77 +1,77 @@
 @startuml
-title Diagrama de Arquitetura - Sistema de Aluguel de Carros
+skinparam rectangle<<behavior>> {
+    roundCorner 25
+}
+sprite $bProcess jar:archimate/business-process
+sprite $aService jar:archimate/application-service
+sprite $aComponent jar:archimate/application-component
+sprite $tNode jar:archimate/technology-node
+sprite $tDevice jar:archimate/device
 
+' --- CAMADA DE NEGÓCIO (Requisitos do Lab 02) ---
+rectangle "Processo de\nGestão de Aluguel" as GA <<$bProcess>><<behavior>> #Business
+rectangle "Realizar Cadastro" as RC <<$bProcess>><<behavior>> #Business
+rectangle "Solicitar e Modificar\nPedidos" as SMP <<$bProcess>><<behavior>> #Business
+rectangle "Avaliação Financeira\n(Agentes)" as AF <<$bProcess>><<behavior>> #Business
 
-' Atores (Clientes e Agentes)
-actor Usuário as "Usuário\n(Cliente ou Agente)"
+GA *-down- RC
+GA *-down- SMP
+GA *-down- AF
 
-' Nuvem (Internet)
-cloud "Internet" {
+' --- CAMADA DE APLICAÇÃO (Componentes de Software) ---
+rectangle "Frontend SPA\n(React.js)" as ReactApp <<$aComponent>> #Application
+rectangle "Backend API\n(Spring Boot)" as SpringApp <<$aComponent>> #Application
 
-    rectangle "React Frontend" as ReactApp {
-        component "Browser (SPA)" as Browser
-    }
+' Interfaces Expostas
+rectangle "Interface Web\n(Cliente/Agente)" as WebUI <<$aService>><<behavior>> #Application
+rectangle "REST API" as ApiService <<$aService>><<behavior>> #Application
+
+ReactApp -up-> WebUI
+SpringApp -up-> ApiService
+
+WebUI .up.> RC : Permite
+WebUI .up.> SMP : Permite
+WebUI .up.> AF : Permite (Agentes)
+
+' --- CAMADA DE TECNOLOGIA (AWS Cloud Infrastructure) ---
+
+node "Cliente" as ClientNode <<$tDevice>> #Technology {
+    rectangle "Navegador Web" as Browser <<$tNode>> #Technology
 }
 
-' Backend - Servidor Central
-rectangle "Servidor Central (Backend)" as Backend {
-
-    component "API Gateway / Load Balancer" as LB
+node "AWS Cloud" as AWS <<$tNode>> #Technology {
     
-    ' Aplicação
-    rectangle "Spring Boot API" as SpringApp {
-        component "[Spring Boot App]" as App
-        note bottom of App
-            Subsistema de "gestão de
-            pedidos e contratos".
-        end note
+    rectangle "Amazon API Gateway\n(Load Balancer/Entry)" as APIGw <<$tNode>> #Technology
+    
+    rectangle "Container Service\n(ECS/EC2)" as Compute <<$tNode>> #Technology {
+       rectangle "Spring Boot Instance" as SpringInstance <<$tNode>> #Technology
     }
 
-    ' Cache
-    rectangle "Cache" as Cache {
-        database "Redis" as Redis
-        note top of Redis
-            Armazena sessões,
-            disponibilidade de carros,
-            listas de pedidos pendentes.
-        end note
-    }
-
-    ' Banco de Dados Relacional
-    rectangle "Banco de Dados" as DB {
-        database "PostgreSQL" as Postgres
-        note top of Postgres
-            Armazena dados estruturados:
-            Usuários, Pedidos, Carros,
-            Contratos, Links para arquivos.
-        end note
-    }
-
-    ' Armazenamento de Arquivos
-    rectangle "Armazenamento de Objetos" as Storage {
-        database "Object Storage\n(S3, Minio, etc)" as S3
-        note top of S3
-            Armazena arquivos pesados:
-            Fotos de carros,
-            Scans de RG/CPF,
-            PDFs de Contratos.
-        end note
+    rectangle "Data Persistence" as DataLayer <<$tNode>> #Technology {
+        rectangle "Amazon RDS\n(PostgreSQL)" as Postgres <<$tNode>> #Technology
+        rectangle "Amazon ElastiCache\n(Redis)" as Redis <<$tNode>> #Technology
+        rectangle "Amazon S3\n(Object Storage)" as S3 <<$tNode>> #Technology
     }
 }
 
-' --- Fluxo de Dados ---
-Usuário --> Browser : (usa)
+' Relacionamentos de Fluxo
+Browser .right.> APIGw : HTTPS / JSON
+APIGw .right.> SpringInstance : Roteamento
+SpringInstance .right.> Postgres : Persistência (JPA)
+SpringInstance .down.> Redis : Cache / Sessão
+SpringInstance .down.> S3 : Documentos/Imagens
 
-Browser -down-> LB : HTTPS (API Requests)\n(JSON)
+' Mapeamento Aplicação -> Infraestrutura
+Browser -up- ReactApp : Executa
+SpringInstance -up- SpringApp : Hospeda
 
-LB --> App : (roteia)
-
-App <--> Redis : (cache de sessão e dados)
-App <--> Postgres : (lê/escreve dados principais)
-App <--> S3 : (salva/lê arquivos)
-note on link
-  1. Salva arquivo (ex: PDF) no S3
-  2. Salva a URL do arquivo no Postgres
-end note
-
+legend left
+Legenda dos Componentes:
+====
+<$bProcess> : Regras de Negócio
+====
+<$aComponent> : Módulos de Software (React/Spring)
+====
+<$tNode> : Serviços AWS (Infraestrutura)
+endlegend
 @enduml
